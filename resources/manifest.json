@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "files": [
+    "rate-limit-429-logging-schema.json",
+    "rate-limit-config-template.yaml",
+    "rate-limit-decision-checklist.md",
+    "README.md"
+  ]
+}

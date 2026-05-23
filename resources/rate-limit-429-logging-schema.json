@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Exchange Rate Limit 429 Error Schema",
+  "description": "Structured logging schema for rate limit (429) errors from exchange APIs. Use this to ensure your logs are consistent and queryable.",
+  "type": "object",
+  "required": [
+    "timestamp",
+    "event_type",
+    "exchange",
+    "endpoint",
+    "http_status",
+    "retry_count",
+    "wait_duration_ms"
+  ],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the 429 error occurred",
+      "example": "2026-01-27T14:30:20.123Z"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "rate_limit_429",
+        "rate_limit_retry_success",
+        "rate_limit_retry_failed",
+        "ban_detected"
+      ],
+      "description": "Type of rate limit event"
+    },
+    "exchange": {
+      "type": "string",
+      "enum": [
+        "binance",
+        "kraken",
+        "coinbase",
+        "bybit",
+        "ftx",
+        "deribit",
+        "bitmex"
+      ],
+      "description": "Which exchange this occurred on"
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "The API endpoint that was rate limited",
+      "example": "/api/v3/order"
+    },
+    "http_status": {
+      "type": "integer",
+      "enum": [429],
+      "description": "HTTP status code (should always be 429 for this schema)"
+    },
+    "retry_after_header": {
+      "type": ["string", "integer", "null"],
+      "description": "Value of the Retry-After header from the exchange response (seconds or HTTP-date)",
+      "example": "5"
+    },
+    "request_weight": {
+      "type": ["integer", "null"],
+      "description": "Weight/cost of this single request (if applicable)",
+      "example": 1
+    },
+    "cumulative_weight_used": {
+      "type": ["integer", "null"],
+      "description": "Total weight used in the current rate limit window",
+      "example": 1195
+    },
+    "window_duration_seconds": {
+      "type": ["integer", "null"],
+      "description": "Duration of the rate limit window (e.g., 60 for 1-minute window)",
+      "example": 60
+    },
+    "limit_per_window": {
+      "type": ["integer", "null"],
+      "description": "Maximum allowed requests/weight per window",
+      "example": 1200
+    },
+    "retry_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Which retry attempt this is (1 = first 429, 2 = first retry, etc.)",
+      "example": 1
+    },
+    "max_retries": {
+      "type": "integer",
+      "description": "Maximum retries configured for this endpoint",
+      "example": 3
+    },
+    "backoff_strategy": {
+      "type": "string",
+      "enum": ["exponential", "fixed", "linear", "custom"],
+      "description": "Backoff strategy being used"
+    },
+    "base_wait_seconds": {
+      "type": "number",
+      "description": "Base wait time for backoff calculation",
+      "example": 1.0
+    },
+    "wait_duration_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How long we actually waited before this retry (in milliseconds)",
+      "example": 1523
+    },
+    "jitter_applied_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Random jitter added to backoff (in milliseconds)",
+      "example": 523
+    },
+    "reason_for_429": {
+      "type": ["string", "null"],
+      "enum": [
+        "rate_limit_exceeded",
+        "too_many_requests",
+        "weight_limit_exceeded",
+        "api_count_exceeded",
+        "unknown"
+      ],
+      "description": "Inferred reason from the response body or headers"
+    },
+    "request_id": {
+      "type": ["string", "null"],
+      "description": "Exchange-provided request ID for tracing (if available)",
+      "example": "xyz123"
+    },
+    "user_agent": {
+      "type": ["string", "null"],
+      "description": "User-Agent header (some exchanges rate-limit per user agent)",
+      "example": "TradingBot/1.0"
+    },
+    "ip_address": {
+      "type": ["string", "null"],
+      "description": "IP address making the request (useful for detecting shared infrastructure issues)"
+    },
+    "strategy_name": {
+      "type": ["string", "null"],
+      "description": "Name of the trading strategy that triggered this request",
+      "example": "GridBot-BTC-USD"
+    },
+    "total_requests_in_window": {
+      "type": ["integer", "null"],
+      "description": "Total requests made in this window (before 429)",
+      "example": 1150
+    },
+    "consecutive_429_count": {
+      "type": ["integer", "null"],
+      "description": "How many 429s in a row (0 if this is the first)",
+      "example": 0
+    },
+    "circuit_breaker_state": {
+      "type": ["string", "null"],
+      "enum": ["closed", "open", "half-open"],
+      "description": "State of circuit breaker (if implemented)"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warning", "error"],
+      "description": "Severity level (info = expected, warning = unusual, error = potential ban)"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional tags for filtering and alerting",
+      "example": ["cryptobot", "trading", "retry-logic"]
+    }
+  }
+}

@@ -1,0 +1,106 @@
+# Exchange Rate Limit Configuration Template
+# Use this as a baseline for your trading bot. Adjust limits and windows based on your exchange docs.
+# Each section corresponds to one exchange. Duplicate and modify for additional exchanges.
+
+rate_limits:
+  # ==================== BINANCE ====================
+  # Binance uses a 1-minute fixed-window bucket with weight-based tracking.
+  # Learn more: https://binance-docs.github.io/apidocs/#general-info
+  binance:
+    trading:
+      limit: 1200                    # Requests per window
+      window_seconds: 60             # Fixed window duration (1 minute)
+      window_type: fixed             # Type of window (fixed or leaky_bucket)
+      retry_strategy: exponential_backoff
+      base_wait_seconds: 1           # Start with 1 second
+      max_wait_seconds: 30           # Cap at 30 seconds
+      max_retries: 3                 # Give up after 3 retries
+      jitter_enabled: true           # Add randomness to avoid thundering herd
+      respect_retry_after: true      # Honor the Retry-After header
+      log_every_429: true            # Log all 429 errors
+  
+    orders:
+      limit: 100                     # Order-specific endpoint might have lower limits
+      window_seconds: 60
+      window_type: fixed
+      base_wait_seconds: 2
+      max_wait_seconds: 60
+      max_retries: 5
+
+  # ==================== KRAKEN ====================
+  # Kraken uses a "call counter" (counter-reset every 15 seconds).
+  # https://docs.kraken.com/rest/#rate-limits
+  kraken:
+    trading:
+      limit: 15                      # API call counter
+      window_seconds: 15             # Counter resets every 15 seconds
+      window_type: fixed
+      base_wait_seconds: 2
+      max_wait_seconds: 60
+      max_retries: 5
+      jitter_enabled: true
+      respect_retry_after: true
+
+  # ==================== COINBASE ====================
+  # Coinbase uses a leaky bucket with 5 requests per second (per user_agent).
+  # https://docs.cloud.coinbase.com/advanced-trade/docs/rest-api-rate-limits
+  coinbase:
+    trading:
+      limit: 5                       # Requests per second
+      window_seconds: 1              # Per second (leaky bucket drains at this rate)
+      window_type: leaky_bucket      # Smooth request processing
+      base_wait_seconds: 0.5         # Start waiting 500ms
+      max_wait_seconds: 10
+      max_retries: 3
+      jitter_enabled: true
+      respect_retry_after: true
+
+  # ==================== BYBIT ====================
+  # Bybit uses a rolling 5-minute window with different limits per endpoint.
+  # https://bybit-exchange.github.io/docs/spot/#rate-limits
+  bybit:
+    trading:
+      limit: 50                      # Requests per 5-minute window
+      window_seconds: 300            # 5 minutes
+      window_type: fixed
+      base_wait_seconds: 1
+      max_wait_seconds: 30
+      max_retries: 5
+      jitter_enabled: true
+
+# ==================== GLOBAL BACKOFF STRATEGY ====================
+backoff:
+  # Exponential backoff formula: base_wait_seconds * (2 ^ (attempt - 1))
+  # Attempt 1: 1 * 2^0 = 1 second
+  # Attempt 2: 1 * 2^1 = 2 seconds
+  # Attempt 3: 1 * 2^2 = 4 seconds
+  # (capped at max_wait_seconds and plus jitter)
+  
+  jitter_range: [0, 1]              # Add random jitter (0-1 seconds) to avoid synchronized retries
+  
+# ==================== DETECTION LOGIC ====================
+# Detect which rate-limit type you're running into:
+
+detection:
+  # Fixed window: sends burst of 429s all at once after hitting limit
+  # Leaky bucket: sends 429s spread over time as requests drain
+  test_burst_count: 100             # Send this many requests as fast as possible
+  bucket_duration: 60               # Then wait this long and try again
+  
+# ==================== OBSERVABILITY ====================
+# These fields should be logged on every 429 error for diagnosis.
+
+logging:
+  required_fields:
+    - timestamp             # ISO-8601 timestamp
+    - exchange             # Which exchange
+    - endpoint             # Which API endpoint
+    - http_status          # Should be 429
+    - retry_after_header   # What the exchange told us to wait
+    - request_weight       # Request weight/cost
+    - cumulative_weight    # Total weight used in this window
+    - retry_count          # Which retry is this?
+    - wait_duration_ms     # How long we waited before this retry
+    - backoff_strategy     # "exponential" or other
+    - jitter_applied_ms    # How much jitter was added
+    - reason_for_429       # "rate_limit_exceeded", "too_many_requests", etc.

@@ -17,6 +17,18 @@ It is designed for quick implementation support, community sharing, and stable v
 
 YAML config templates for Binance, Kraken, Coinbase, Bybit + decision checklist + 429 logging schema. Know when you're being rate-limited before your bot crashes.
 
+## Repository Contents
+
+- `resources/` contains shipped files copied from MatrixTrak public ship assets when available
+- `docs/post-mapping.md` maps this resource to related blog posts
+- `docs/resource-files.md` lists included files and source mapping
+- Included shipped files:
+  - resources/manifest.json
+  - resources/rate-limit-429-logging-schema.json
+  - resources/rate-limit-config-template.yaml
+  - resources/rate-limit-decision-checklist.md
+  - resources/README.md
+
 ## Who This Is For
 
 - Engineers handling production incidents and reliability gaps
