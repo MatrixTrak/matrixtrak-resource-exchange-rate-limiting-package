@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-05-23T11:14:31.612Z",
+  "resourceSlug": "exchange-rate-limiting-package",
+  "title": "Exchange rate limiting & backoff strategy package",
+  "description": "YAML config templates for Binance, Kraken, Coinbase, Bybit + decision checklist + 429 logging schema. Know when you're being rate-limited before your bot crashes.",
+  "category": "Crypto Automation",
+  "pillar": "",
+  "canonicalResourceUrl": "https://matrixtrak.com/resources/exchange-rate-limiting-package",
+  "primaryPostSlugs": [
+    "trading-bot-429-after-deploy-stop-rate-limit-storms"
+  ],
+  "secondaryRelatedPostSlugs": [
+    "exchange-api-bans-how-to-prevent"
+  ]
+}
